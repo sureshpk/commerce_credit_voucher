@@ -1,0 +1,90 @@
+<?php
+/**
+ * @file
+ * Provides a credit voucher payment method for Drupal Commerce.
+ */
+
+/**
+ * Implements hook_commerce_payment_method_info().
+ */
+function commerce_credit_voucher_commerce_payment_method_info() {
+  $payment_methods = array();
+
+  $payment_methods['commerce_credit_voucher'] = array(
+    'title' => t('Credit Voucher'),
+    'description' => t('Takes the value of vouchers off the order total amount.'),
+    'active' => TRUE,
+  );
+
+  return $payment_methods;
+}
+
+
+/**
+ * Payment method callback: submit form.
+ */
+function commerce_credit_voucher_submit_form($payment_method, $pane_values, $checkout_pane, $order) {
+  $form = array();
+
+  // Merge in values from the order.
+  if (!empty($order->data['commerce_credit_voucher'])) {
+    $pane_values += $order->data['commerce_credit_voucher'];
+  }
+
+  // Merge in default values.
+  $pane_values += array(
+    'voucher_code' => '',
+  );
+
+  $form['voucher_code'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Voucher Code'),
+    '#default_value' => $pane_values['voucher_code'],
+    '#required' => TRUE,
+  );
+
+  return $form;
+}
+
+
+/**
+ * Payment method callback: submit form validation.
+ */
+function commerce_credit_voucher_submit_form_validate($payment_method, $pane_form, $pane_values, $order, $form_parents = array()) {
+  return FALSE;
+}
+
+
+/**
+ * Payment method callback: submit form submission.
+ */
+function commerce_credit_voucher_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
+  $order->data['commerce_credit_voucher'] = $pane_values;
+
+  commerce_credit_voucher_transaction($payment_method, $order, $charge, $pane_values['voucher_code']);
+}
+
+
+/**
+ * Creates a payment transaction for the specified charge amount.
+ *
+ * @param $payment_method
+ *   The payment method instance object used to charge this payment.
+ * @param $order
+ *   The order object the payment applies to.
+ * @param $charge
+ *   An array indicating the amount and currency code to charge.
+ * @param $voucher_code
+ *   The voucher code entered on the submission form.
+ */
+function commerce_credit_voucher_transaction($payment_method, $order, $charge, $voucher_code) {
+  $transaction = commerce_payment_transaction_new('commerce_credit_voucher', $order->order_id);
+  $transaction->instance_id = $payment_method['instance_id'];
+  $transaction->amount = $charge['amount'];
+  $transaction->currency_code = $charge['currency_code'];
+  $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+  $transaction->message = 'Voucher Code: @voucher_code';
+  $transaction->message_variables = array('@voucher_code' => $voucher_code);
+
+  commerce_payment_transaction_save($transaction);
+}
