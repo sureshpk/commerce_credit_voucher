@@ -5,6 +5,106 @@
  */
 
 /**
+ * Implements hook_init().
+ */
+function commerce_credit_voucher_init() {
+}
+
+
+/**
+ * Implements hook_entity_info().
+ */
+function commerce_credit_voucher_entity_info() {
+  $entity_info = array();
+
+  $entity_info['commerce_credit_voucher'] = array(
+    'label' => t('Commerce Credit Voucher'),
+    'controller class' => 'EntityAPIController',
+    'base table' => 'commerce_credit_voucher',
+    'uri callback' => 'commerce_credit_voucher_uri',
+    'entity keys' => array(
+      'id' => 'voucher_id',
+    ),
+    'bundles' => array(),
+  );
+
+  return $entity_info;
+}
+
+
+/**
+ * Load node entities from the database.
+ *
+ * This function should be used whenever you need to load more than one voucher
+ * from the database. Vouchers are loaded into memory and will not require
+ * database access if loaded again during the same page request.
+ *
+ * @param $nids
+ *   An array of commerce credit voucher IDs.
+ * @param $conditions
+ *   (deprecated) An associative array of conditions on the {commerce_credit_voucher}
+ *   table, where the keys are the database fields and the values are the
+ *   values those fields must have. Instead, it is preferable to use
+ *   EntityFieldQuery to retrieve a list of entity IDs loadable by
+ *   this function.
+ * @param $reset
+ *   Whether to reset the internal node_load cache.
+ *
+ * @return
+ *   An array of commerce_credit_voucher objects indexed by voucher_id.
+ */
+function commerce_credit_voucher_load_multiple($voucher_ids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('commerce_credit_voucher', $voucher_ids, $conditions, $reset);
+}
+
+
+/**
+ * Load a commerce_credit_voucher object from the database.
+ *
+ * @param $voucher_id
+ *   The voucher ID.
+ * @param $voucher_revision_id
+ *   The voucher revision ID (but this module doesn't support revisions).
+ * @param $reset
+ *   Whether to reset the commerce_credit_voucher_load cache.
+ *
+ * @return
+ *   A fully-populated commerce_credit_voucher object, or FALSE if the
+ *   commerce_credit_voucher is not found.
+ */
+function commerce_credit_voucher_load($voucher_id = NULL, $voucher_revision_id = NULL, $reset = FALSE) {
+  $voucher_ids = isset($voucher_id) ? array($voucher_id) : array();
+  $conditions = array();
+  $commerce_credit_voucher = commerce_credit_voucher_load_multiple($voucher_ids, $conditions, $reset);
+
+  return $commerce_credit_voucher ? reset($commerce_credit_voucher) : FALSE;
+}
+
+
+/**
+ * Load a commerce_credit_voucher object by code from the database.
+ *
+ * @param $code
+ *   The voucher code.
+ *
+ * @return
+ *   A fully-populated commerce_credit_voucher object, or FALSE if the
+ *   commerce_credit_voucher is not found.
+ */
+function commerce_credit_voucher_load_by_code($code) {
+  $query = new EntityFieldQuery();
+  $entities = $query->entityCondition('entity_type', 'commerce_credit_voucher')
+                    ->propertyCondition('code', $code)
+                    ->execute();
+
+  $voucher_ids = array_keys($entities['commerce_credit_voucher']);
+  $commerce_credit_voucher = commerce_credit_voucher_load_multiple($voucher_ids);
+
+  return $commerce_credit_voucher ? reset($commerce_credit_voucher) : FALSE;
+}
+
+
+/**
  * Implements hook_commerce_payment_method_info().
  */
 function commerce_credit_voucher_commerce_payment_method_info() {
