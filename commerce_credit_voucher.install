@@ -1,0 +1,63 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the Commerce Credit Voucher module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function commerce_credit_voucher_schema() {
+  $schema['commerce_credit_voucher'] = array(
+    'description' => 'The base table for vouchers.',
+    'fields' => array(
+      'voucher_id' => array(
+        'description' => 'The primary identifier for the voucher.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'code' => array(
+        'description' => 'The voucher code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      // @TODO: Add a column for SKU.
+      'is_active' => array(
+        'description' => 'Indicates whether this voucher is active or not.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'start_date' => array(
+        'description' => 'The Unix timestamp when the voucher is supposed to be active.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'end_date' => array(
+        'description' => 'The Unix timestamp when the voucher is supposed to expire.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the voucher was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the voucher was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('voucher_id'),
+  );
+
+  return $schema;
+}
