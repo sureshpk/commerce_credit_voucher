@@ -24,7 +24,21 @@ function commerce_credit_voucher_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      // @TODO: Add a column for SKU.
+      'amount' => array(
+        'description' => 'The amount of the voucher.',
+        'type' => 'numeric',
+        'size' => 'normal',
+        'precision' => 10,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sku' => array(
+        'description' => 'The SKU code for the product, if there is one.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+      ),
       'is_active' => array(
         'description' => 'Indicates whether this voucher is active or not.',
         'type' => 'int',

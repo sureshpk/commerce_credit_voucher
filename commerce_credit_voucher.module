@@ -33,7 +33,7 @@ function commerce_credit_voucher_entity_info() {
 
 
 /**
- * Load node entities from the database.
+ * Loads node entities from the database.
  *
  * This function should be used whenever you need to load more than one voucher
  * from the database. Vouchers are loaded into memory and will not require
@@ -59,7 +59,7 @@ function commerce_credit_voucher_load_multiple($voucher_ids = array(), $conditio
 
 
 /**
- * Load a commerce_credit_voucher object from the database.
+ * Loads a commerce_credit_voucher object from the database.
  *
  * @param $voucher_id
  *   The voucher ID.
@@ -82,25 +82,48 @@ function commerce_credit_voucher_load($voucher_id = NULL, $voucher_revision_id =
 
 
 /**
- * Load a commerce_credit_voucher object by code from the database.
+ * Loads a commerce_credit_voucher object by code from the database.
  *
  * @param $code
  *   The voucher code.
+ * @param $force_active
+ *   Force to only list active vouchers.
  *
  * @return
  *   A fully-populated commerce_credit_voucher object, or FALSE if the
  *   commerce_credit_voucher is not found.
  */
-function commerce_credit_voucher_load_by_code($code) {
+function commerce_credit_voucher_load_by_code($code, $force_active = TRUE) {
   $query = new EntityFieldQuery();
   $entities = $query->entityCondition('entity_type', 'commerce_credit_voucher')
                     ->propertyCondition('code', $code)
+                    ->propertyCondition('is_active', $force_active)
                     ->execute();
 
-  $voucher_ids = array_keys($entities['commerce_credit_voucher']);
-  $commerce_credit_voucher = commerce_credit_voucher_load_multiple($voucher_ids);
+  $return = FALSE;
 
-  return $commerce_credit_voucher ? reset($commerce_credit_voucher) : FALSE;
+  if (isset($entities['commerce_credit_voucher'])) {
+    $voucher_ids = array_keys($entities['commerce_credit_voucher']);
+    $commerce_credit_voucher = commerce_credit_voucher_load_multiple($voucher_ids);
+
+    $return = $commerce_credit_voucher ? reset($commerce_credit_voucher) : FALSE;
+  }
+
+  return $return;
+}
+
+
+/**
+ * Saves a commerce_credit_voucher.
+ *
+ * @param $commerce_credit_voucher
+ *   The full commerce_credit_voucher object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function commerce_credit_voucher_save($commerce_credit_voucher) {
+  return entity_get_controller('commerce_credit_voucher')->save($commerce_credit_voucher);
 }
 
 
@@ -151,7 +174,22 @@ function commerce_credit_voucher_submit_form($payment_method, $pane_values, $che
  * Payment method callback: submit form validation.
  */
 function commerce_credit_voucher_submit_form_validate($payment_method, $pane_form, $pane_values, $order, $form_parents = array()) {
-  return FALSE;
+  $ret = FALSE;
+
+  if (trim($pane_values['voucher_code']) != '') {
+    $commerce_credit_voucher = commerce_credit_voucher_load_by_code($pane_values['voucher_code']);
+
+    // Check whether the credit voucher exists.
+    if (!$commerce_credit_voucher) {
+      drupal_set_message(t('The credit voucher code you entered does not exist or has already been used.'), 'error');
+    }
+    else {
+      
+      $ret = TRUE;
+    }
+  }
+
+  return $ret;
 }
 
 
@@ -161,7 +199,21 @@ function commerce_credit_voucher_submit_form_validate($payment_method, $pane_for
 function commerce_credit_voucher_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
   $order->data['commerce_credit_voucher'] = $pane_values;
 
-  commerce_credit_voucher_transaction($payment_method, $order, $charge, $pane_values['voucher_code']);
+  $commerce_credit_voucher = commerce_credit_voucher_load_by_code($pane_values['voucher_code']);
+
+  // Work out how much the user is going to be charged for.
+  if ($charge['amount'] <= $commerce_credit_voucher->amount) {
+    $ret = TRUE;
+  }
+  else {
+    $charge['amount'] = $commerce_credit_voucher->amount;
+    $ret = FALSE;
+  }
+
+  // Perform a transaction.
+  commerce_credit_voucher_transaction($payment_method, $order, $charge, $commerce_credit_voucher);
+
+  return $ret;
 }
 
 
@@ -174,17 +226,36 @@ function commerce_credit_voucher_submit_form_submit($payment_method, $pane_form,
  *   The order object the payment applies to.
  * @param $charge
  *   An array indicating the amount and currency code to charge.
- * @param $voucher_code
- *   The voucher code entered on the submission form.
+ * @param $commerce_credit_voucher
+ *   The full commerce_credit_voucher object.
  */
-function commerce_credit_voucher_transaction($payment_method, $order, $charge, $voucher_code) {
+function commerce_credit_voucher_transaction($payment_method, $order, $charge, $commerce_credit_voucher) {
   $transaction = commerce_payment_transaction_new('commerce_credit_voucher', $order->order_id);
   $transaction->instance_id = $payment_method['instance_id'];
   $transaction->amount = $charge['amount'];
   $transaction->currency_code = $charge['currency_code'];
   $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
   $transaction->message = 'Voucher Code: @voucher_code';
-  $transaction->message_variables = array('@voucher_code' => $voucher_code);
+  $transaction->message_variables = array('@voucher_code' => $commerce_credit_voucher->voucher_code);
 
-  commerce_payment_transaction_save($transaction);
+  // Make sure the credit voucher is flagged as inactive.
+  if (commerce_payment_transaction_save($transaction)) {
+    $commerce_credit_voucher->is_active = FALSE;
+    commerce_credit_voucher_save($commerce_credit_voucher);
+  }
+}
+
+
+/**
+ * Checks if a given voucher is valid for a given order.
+ *
+ * @param $code
+ *   The coupon code to validate.
+ * @param $order
+ *   The order at against the $code should be validated.
+ *
+ * @return boolean
+ *   Returns whether the voucher is valid.
+ */
+function commerce_credit_voucher_is_valid($code, $order) {
 }
