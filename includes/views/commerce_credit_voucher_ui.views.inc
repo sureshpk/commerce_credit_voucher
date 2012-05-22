@@ -168,14 +168,6 @@ function commerce_credit_voucher_ui_views_data() {
     ),
   );
 
-  $data['commerce_credit_voucher']['view_credit_voucher'] = array(
-    'field' => array(
-      'title' => t('Link'),
-      'help' => t('Provide a simple link to the administrator view of the credit voucher.'),
-      'handler' => 'commerce_credit_voucher_handler_field_credit_voucher_link',
-    ),
-  );
-
   $data['commerce_credit_voucher']['edit_credit_voucher'] = array(
     'field' => array(
       'title' => t('Edit link'),

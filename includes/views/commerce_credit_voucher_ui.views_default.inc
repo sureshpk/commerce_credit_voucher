@@ -35,9 +35,8 @@ function commerce_credit_voucher_ui_views_default_views() {
     'voucher_id' => 'voucher_id',
     'code' => 'code',
     'created' => 'created',
-    'view_credit_voucher' => 'view_credit_voucher',
-    'edit_credit_voucher' => 'view_credit_voucher',
-    'delete_credit_voucher' => 'view_credit_voucher',
+    'edit_credit_voucher' => 'edit_credit_voucher',
+    'delete_credit_voucher' => 'edit_credit_voucher',
   );
   $handler->display->display_options['style_options']['default'] = 'voucher_id';
   $handler->display->display_options['style_options']['info'] = array(
@@ -62,14 +61,9 @@ function commerce_credit_voucher_ui_views_default_views() {
       'separator' => '',
       'empty_column' => 0,
     ),
-    'view_credit_voucher' => array(
-      'align' => '',
-      'separator' => ' &nbsp; ',
-      'empty_column' => 0,
-    ),
     'edit_credit_voucher' => array(
       'align' => '',
-      'separator' => '',
+      'separator' => ' &nbsp; ',
       'empty_column' => 0,
     ),
     'delete_credit_voucher' => array(
@@ -151,33 +145,11 @@ function commerce_credit_voucher_ui_views_default_views() {
   $handler->display->display_options['fields']['created']['empty_zero'] = 0;
   $handler->display->display_options['fields']['created']['hide_alter_empty'] = 1;
   $handler->display->display_options['fields']['created']['date_format'] = 'short';
-  /* Field: Commerce Credit Voucher: Link */
-  $handler->display->display_options['fields']['view_credit_voucher']['id'] = 'view_credit_voucher';
-  $handler->display->display_options['fields']['view_credit_voucher']['table'] = 'commerce_credit_voucher';
-  $handler->display->display_options['fields']['view_credit_voucher']['field'] = 'view_credit_voucher';
-  $handler->display->display_options['fields']['view_credit_voucher']['label'] = 'Operations';
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['absolute'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['external'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['replace_spaces'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['trim_whitespace'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['nl2br'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['more_link'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['alter']['html'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['element_label_colon'] = 1;
-  $handler->display->display_options['fields']['view_credit_voucher']['element_default_classes'] = 1;
-  $handler->display->display_options['fields']['view_credit_voucher']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['empty_zero'] = 0;
-  $handler->display->display_options['fields']['view_credit_voucher']['hide_alter_empty'] = 1;
   /* Field: Commerce Credit Voucher: Edit link */
   $handler->display->display_options['fields']['edit_credit_voucher']['id'] = 'edit_credit_voucher';
   $handler->display->display_options['fields']['edit_credit_voucher']['table'] = 'commerce_credit_voucher';
   $handler->display->display_options['fields']['edit_credit_voucher']['field'] = 'edit_credit_voucher';
+  $handler->display->display_options['fields']['edit_credit_voucher']['label'] = 'Operations';
   $handler->display->display_options['fields']['edit_credit_voucher']['alter']['alter_text'] = 0;
   $handler->display->display_options['fields']['edit_credit_voucher']['alter']['make_link'] = 0;
   $handler->display->display_options['fields']['edit_credit_voucher']['alter']['absolute'] = 0;

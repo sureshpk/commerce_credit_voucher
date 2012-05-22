@@ -25,29 +25,19 @@ function commerce_credit_voucher_ui_menu() {
   $items['admin/commerce/credit-vouchers/%commerce_credit_voucher'] = array(
     'title callback' => 'commerce_credit_voucher_ui_credit_voucher_title',
     'title arguments' => array(3),
-    'page callback' => 'commerce_credit_voucher_ui_credit_voucher_view',
-    'page arguments' => array(3),
-    'access callback' => 'commerce_credit_voucher_access',
-    'access arguments' => array('view', 3),
-  );
-
-  $items['admin/commerce/credit-vouchers/%commerce_credit_voucher/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -15,
-    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-  );
-
-  $items['admin/commerce/credit-vouchers/%commerce_credit_voucher/edit'] = array(
-    'title' => 'Edit',
     'page callback' => 'commerce_credit_voucher_ui_form_wrapper',
     'page arguments' => array(3),
     'access callback' => 'commerce_credit_voucher_access',
     'access arguments' => array('update', 3),
-    'type' => MENU_LOCAL_TASK,
+    'weight' => -15,
+    'file' => 'commerce_credit_voucher_ui.pages.inc',
+  );
+
+  $items['admin/commerce/credit-vouchers/%commerce_credit_voucher/edit'] = array(
+    'title' => 'Edit',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    'file' => 'commerce_credit_voucher_ui.pages.inc',
   );
 
   $items['admin/commerce/credit-vouchers/%commerce_credit_voucher/delete'] = array(
@@ -125,28 +115,12 @@ function commerce_credit_voucher_ui_credit_voucher_uri($commerce_credit_voucher)
  *   A page title of the format "Credit voucher ##".
  */
 function commerce_credit_voucher_ui_credit_voucher_title($commerce_credit_voucher) {
-  return t('Credit voucher @voucher_id', array('@voucher_id' => $commerce_credit_voucher->voucher_id));
+  return t('Edit Credit voucher @voucher_id', array('@voucher_id' => $commerce_credit_voucher->voucher_id));
 }
 
 
 /**
- * Generate an array for rendering the given order.
- *
- * @param $commerce_credit_voucher
- *   A fully loaded commerce credit voucher object.
- * @param $view_mode
- *   The view mode for displaying the commerce credit voucher, 'administrator' or 'customer'.
- *
- * @return
- *   An array as expected by drupal_render().
- */
-function commerce_credit_voucher_ui_credit_voucher_view($commerce_credit_voucher, $view_mode = 'administrator') {
-  return entity_view('commerce_credit_voucher', array($commerce_credit_voucher->voucher_id => $commerce_credit_voucher), $view_mode, NULL, TRUE);
-}
-
-
-/**
- * Callback function that sets a start and end date for a date element.
+ * Date form element callback: sets a start and end date of a date element.
  */
 function commerce_credit_voucher_ui_custom_date_element($form_element) {
   $start_year = isset($form_element['#start_year']) ? $form_element['#start_year'] : date('Y');

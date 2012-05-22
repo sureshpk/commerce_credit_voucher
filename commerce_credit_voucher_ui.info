@@ -12,6 +12,5 @@ files[] = commerce_credit_voucher_ui.pages.inc
 files[] = includes/views/commerce_credit_voucher_ui.views.inc
 
 ; Views handlers
-files[] = includes/views/handlers/commerce_credit_voucher_handler_field_credit_voucher_link.inc
 files[] = includes/views/handlers/commerce_credit_voucher_handler_field_credit_voucher_link_delete.inc
 files[] = includes/views/handlers/commerce_credit_voucher_handler_field_credit_voucher_link_edit.inc

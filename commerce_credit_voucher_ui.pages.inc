@@ -13,7 +13,7 @@
  * @see commerce_credit_voucher_ui_form()
  */
 function commerce_credit_voucher_ui_form_wrapper($commerce_credit_voucher) {
-  if (!$commerce_credit_voucher->voucher_id) {
+  if ($commerce_credit_voucher->voucher_id) {
     drupal_set_title(t('<em>Edit Credit voucher</em> @voucher_id', array('@voucher_id' => check_plain($commerce_credit_voucher->voucher_id))), PASS_THROUGH);
   }
   return drupal_get_form('commerce_credit_voucher_ui_form', $commerce_credit_voucher);

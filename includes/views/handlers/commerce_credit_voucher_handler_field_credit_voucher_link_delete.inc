@@ -2,7 +2,7 @@
 /**
  * Field handler to present a link to delete a credit voucher.
  */
-class commerce_credit_voucher_handler_field_credit_voucher_link_delete extends commerce_credit_voucher_handler_field_credit_voucher_link {
+class commerce_credit_voucher_handler_field_credit_voucher_link_delete extends commerce_credit_voucher_handler_field_credit_voucher_link_edit {
   function render($values) {
     // Ensure the user has access to delete credit vouchers.
     if (!commerce_credit_voucher_access('update')) {
