@@ -34,7 +34,7 @@ class commerce_credit_voucher_handler_field_credit_voucher_link extends views_ha
 
   function render($values) {
     // Ensure the user has access to edit credit vouchers.
-    if (!user_access('view commerce credit voucher content')) {
+    if (!commerce_credit_voucher_access('view')) {
       return;
     }
 

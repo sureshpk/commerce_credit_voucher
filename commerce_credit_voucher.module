@@ -5,9 +5,10 @@
  */
 
 /**
- * Implements hook_init().
+ * Implements hook_permission().
  */
-function commerce_credit_voucher_init() {
+function commerce_credit_voucher_permission() {
+  return commerce_entity_access_permissions('commerce_credit_voucher');
 }
 
 
@@ -124,6 +125,50 @@ function commerce_credit_voucher_load_by_code($code, $force_active = TRUE, $forc
   }
 
   return $return;
+}
+
+
+/**
+ * Deletes a credit voucher by ID.
+ *
+ * @param $voucher_id
+ *   The ID of the credit voucher to delete.
+ *
+ * @return
+ *   TRUE on success, FALSE otherwise.
+ */
+function commerce_credit_voucher_delete($order_id) {
+  return commerce_credit_voucher_delete_multiple(array($voucher_id));
+}
+
+
+/**
+ * Deletes multiple credit vouchers by ID.
+ *
+ * @param $voucher_ids
+ *   An array of credit voucher IDs to delete.
+ *
+ * @return
+ *   TRUE on success, FALSE otherwise.
+ */
+function commerce_credit_voucher_delete_multiple($order_ids) {
+  return entity_get_controller('commerce_credit_voucher')->delete($voucher_ids);
+}
+
+
+/**
+ * Checks credit voucher access for various operations.
+ *
+ * @param $op
+ *   The operation being performed. One of 'view', 'update', 'create' or
+ *   'delete'.
+ * @param $commerce_credit_voucher
+ *   Optionally a commerce credit voucher object to check access for.
+ * @param $account
+ *   The user to check for. Leave it to NULL to check for the current user.
+ */
+function commerce_credit_voucher_access($op, $commerce_credit_voucher = NULL, $account = NULL) {
+  return commerce_entity_access($op, $commerce_credit_voucher, $account, 'commerce_credit_voucher');
 }
 
 
