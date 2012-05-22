@@ -1,0 +1,97 @@
+<?php
+/**
+ * @file
+ * Provides a UI functionality for the credit voucher payment method module.
+ */
+
+/**
+* Implementation of hook_permissions().
+*/
+function commerce_credit_voucher_ui_permission() {
+  return array(
+    'create commerce credit voucher content' => array(
+      'title' => t('Create a Commerce Credit Voucher'),
+      'description' => t('Ability to create a commerce credit voucher.'),
+    ),
+    'view commerce credit voucher content' => array(
+      'title' => t('View Commerce Credit Voucher'),
+      'description' => t('Ability to access and view a commerce credit voucher.'),
+    ),
+    'edit commerce credit voucher content' => array(
+      'title' => t('Edit Commerce Credit Voucher'),
+      'description' => t('Ability to edit commerce credit vouchers.'),
+    ),
+    'delete commerce credit voucher content' => array(
+      'title' => t('Delete Commerce Credit Voucher'),
+      'description' => t('Ability to delete commerce credit vouchers.'),
+    ),
+  );
+}
+
+
+/**
+ * Implementation of hook_menu().
+ */
+function commerce_credit_voucher_ui_menu() {
+  $items = array();
+
+  // Note: admin/commerce/credit-vouchers is defined by a default View.
+
+  /*
+  $items['cost-centre/add'] = array(
+    'title' => 'Add new Cost Centre',
+    'page callback' => 'cost_centre_add',
+    'access arguments' => array('create cost centre content'),
+    'weight' => 1,
+    'menu_name' => 'management',
+    'file' => 'cost_centre.pages.inc',
+  );
+  $items['cost-centre/%cost_centre'] = array(
+    'title callback' => 'cost_centre_page_title',
+    'title arguments' => array(1),
+    'page callback' => 'cost_centre_page_view',
+    'page arguments' => array(1),
+    'access arguments' => array('view cost centre content'),
+    'file' => 'cost_centre.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['cost-centre/%cost_centre/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  $items['cost-centre/%cost_centre/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'cost_centre_page_edit',
+    'page arguments' => array(1),
+    'access arguments' => array('edit cost centre content'),
+    'weight' => 0,
+    'file' => 'cost_centre.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+  $items['cost-centre/%cost_centre/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cost_centre_delete_confirm', 1),
+    'access arguments' => array('delete cost centre content'),
+    'weight' => 1,
+    'file' => 'cost_centre.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+  );
+  */
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_views_api().
+ */
+function commerce_credit_voucher_ui_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'commerce_credit_voucher') . '/includes/views',
+  );
+}

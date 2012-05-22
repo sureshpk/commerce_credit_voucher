@@ -1,0 +1,17 @@
+name = Credit Voucher Payment Method UI
+description = Provides a UI functionality for the credit voucher payment method module.
+package = Commerce
+dependencies[] = commerce_credit_voucher
+core = 7.x
+
+; Files
+files[] = commerce_credit_voucher_ui.module
+files[] = commerce_credit_voucher_ui.pages.inc
+
+; Views includes
+files[] = includes/views/commerce_credit_voucher_ui.views.inc
+
+; Views handlers
+files[] = includes/views/handlers/commerce_credit_voucher_handler_field_credit_voucher_link.inc
+files[] = includes/views/handlers/commerce_credit_voucher_handler_field_credit_voucher_link_delete.inc
+files[] = includes/views/handlers/commerce_credit_voucher_handler_field_credit_voucher_link_edit.inc
