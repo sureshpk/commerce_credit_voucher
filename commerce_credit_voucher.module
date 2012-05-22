@@ -34,6 +34,23 @@ function commerce_credit_voucher_entity_info() {
 
 
 /**
+ * Entity uri callback: gives modules a chance to specify a path for a credit voucher.
+ */
+function commerce_credit_voucher_uri($commerce_credit_voucher) {
+  foreach (module_implements('commerce_credit_voucher_uri') as $module) {
+    $uri = module_invoke($module, 'commerce_credit_voucher_uri', $commerce_credit_voucher);
+
+    // If the implementation returned data, use that now.
+    if (!empty($uri)) {
+      return $uri;
+    }
+  }
+
+  return NULL;
+}
+
+
+/**
  * Loads node entities from the database.
  *
  * This function should be used whenever you need to load more than one voucher

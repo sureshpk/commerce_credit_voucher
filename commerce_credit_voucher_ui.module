@@ -3,6 +3,38 @@
  * @file
  * Provides a UI functionality for the credit voucher payment method module.
  */
+ 
+/**
+ * Implements hook_entity_info_alter().
+ */
+function commerce_credit_voucher_ui_entity_info_alter(&$entity_info) {
+  // Add a URI callback to the commerce credit voucher entity.
+  $entity_info['commerce_credit_voucher']['uri callback'] = 'commerce_credit_voucher_ui_credit_voucher_uri';
+}
+
+
+/**
+ * Entity uri callback: points to the admin view page of the given credit voucher.
+ */
+function commerce_credit_voucher_ui_credit_voucher_uri($commerce_credit_voucher) {
+  // First look for a return value in the default entity uri callback.
+  $uri = commerce_credit_voucher_uri($commerce_credit_voucher);
+
+  // If a value was found, return it now.
+  if (!empty($uri)) {
+    return $uri;
+  }
+
+  // Only return a value if the user has permission to view the credit voucher.
+  if (commerce_credit_voucher_access('view', $commerce_credit_voucher)) {
+    return array(
+      'path' => 'admin/commerce/credit-vouchers/' . $commerce_credit_voucher->voucher_id,
+    );
+  }
+
+  return NULL;
+}
+
 
 /**
  * Implementation of hook_menu().
