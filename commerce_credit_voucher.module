@@ -20,7 +20,7 @@ function commerce_credit_voucher_entity_info() {
 
   $entity_info['commerce_credit_voucher'] = array(
     'label' => t('Commerce Credit Voucher'),
-    'controller class' => 'EntityAPIController',
+    'controller class' => 'CommerceCreditVoucherEntityController',
     'base table' => 'commerce_credit_voucher',
     'uri callback' => 'commerce_credit_voucher_uri',
     'entity keys' => array(
@@ -154,7 +154,7 @@ function commerce_credit_voucher_load_by_code($code, $force_active = TRUE, $forc
  * @return
  *   TRUE on success, FALSE otherwise.
  */
-function commerce_credit_voucher_delete($order_id) {
+function commerce_credit_voucher_delete($voucher_id) {
   return commerce_credit_voucher_delete_multiple(array($voucher_id));
 }
 
@@ -168,7 +168,7 @@ function commerce_credit_voucher_delete($order_id) {
  * @return
  *   TRUE on success, FALSE otherwise.
  */
-function commerce_credit_voucher_delete_multiple($order_ids) {
+function commerce_credit_voucher_delete_multiple($voucher_ids) {
   return entity_get_controller('commerce_credit_voucher')->delete($voucher_ids);
 }
 
@@ -190,10 +190,21 @@ function commerce_credit_voucher_access($op, $commerce_credit_voucher = NULL, $a
 
 
 /**
- * Saves a commerce_credit_voucher.
+ * Returns an initialized commerce credit voucher object.
+ *
+ * @return
+ *   A commerce credit voucher object with all default fields initialized.
+ */
+function commerce_credit_voucher_new() {
+  return entity_get_controller('commerce_credit_voucher')->create();
+}
+
+
+/**
+ * Saves a commerce credit voucher.
  *
  * @param $commerce_credit_voucher
- *   The full commerce_credit_voucher object to save.
+ *   The full commerce credit voucher object to save.
  *
  * @return
  *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.

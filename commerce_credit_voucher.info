@@ -8,3 +8,4 @@ core = 7.x
 ; Files
 files[] = commerce_credit_voucher.install
 files[] = commerce_credit_voucher.module
+files[] = commerce_credit_voucher.controller.inc

@@ -22,7 +22,7 @@ function commerce_credit_voucher_ui_views_default_views() {
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['title'] = 'Credit Vouchers';
+  $handler->display->display_options['title'] = 'Credit vouchers';
   $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
@@ -260,12 +260,12 @@ function commerce_credit_voucher_ui_views_default_views() {
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['path'] = 'admin/commerce/credit-vouchers/list';
   $handler->display->display_options['menu']['type'] = 'default tab';
-  $handler->display->display_options['menu']['title'] = 'Credit Vouchers';
+  $handler->display->display_options['menu']['title'] = 'Credit vouchers';
   $handler->display->display_options['menu']['description'] = 'Display a list of credit vouchers for the store admin.';
   $handler->display->display_options['menu']['weight'] = '0';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['tab_options']['type'] = 'normal';
-  $handler->display->display_options['tab_options']['title'] = 'Credit Vouchers';
+  $handler->display->display_options['tab_options']['title'] = 'Credit vouchers';
   $handler->display->display_options['tab_options']['description'] = 'Display a list of credit vouchers for the store admin.';
   $handler->display->display_options['tab_options']['weight'] = '0';
   $handler->display->display_options['tab_options']['name'] = 'management';

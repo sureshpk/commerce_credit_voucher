@@ -5,43 +5,86 @@
  */
 
 /**
- * Menu callback to create a cost centre
+ * Form callback wrapper: create or edit a commerce credit voucher.
+ *
+ * @param $commerce_credit_voucher
+ *   The commerce credit voucher object to edit through the form.
+ *
+ * @see commerce_credit_voucher_ui_form()
  */
-function cost_centre_add() {
-  global $user;
-
-  $cost_centre = entity_get_controller('cost_centre')->create();
-  drupal_set_title(t('Create Cost Centre'), PASS_THROUGH);
-
-  return drupal_get_form('cost_centre_form', $cost_centre);
+function commerce_credit_voucher_ui_form_wrapper($commerce_credit_voucher) {
+  if (!$commerce_credit_voucher->voucher_id) {
+    drupal_set_title(t('<em>Edit Credit voucher</em> @voucher_id', array('@voucher_id' => check_plain($commerce_credit_voucher->voucher_id))), PASS_THROUGH);
+  }
+  return drupal_get_form('commerce_credit_voucher_ui_form', $commerce_credit_voucher);
 }
 
 
 /**
- * Create Cost Centre form.
+ * Form callback: create or edit a commerce credit voucher.
+ *
+ * @param $commerce_credit_voucher
+ *   The commerce credit voucher object to edit through the form.
  */
-function cost_centre_form($form, &$form_state, $cost_centre) {
+function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_voucher) {
+
   // Set the id to identify this as an cost centre edit form.
-  $form['#id'] = 'cost-centre-form';
+  $form['#id'] = 'commerce-credit-voucher-form';
 
-  // Save the cost centre for later, in case we need it.
-  $form['#cost_centre'] = $cost_centre;
-  $form_state['cost_centre'] = $cost_centre;
+  // Save the commerce credit voucher for later, in case we need it.
+  $form_state['commerce_credit_voucher'] = $commerce_credit_voucher;
 
-  // Common fields. We don't have many.
-  $form['cost_centre_code'] = array(
+  // Common fields.
+  $form['code'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cost Centre Code'),
-    '#default_value' => $cost_centre->cost_centre_code,
-    '#weight' => -5,
+    '#title' => t('Code'),
+    '#default_value' => check_plain($commerce_credit_voucher->code),
     '#required' => TRUE,
   );
-  $form['cost_centre_desc'] = array(
+
+  $form['amount'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cost Centre Decription'),
-    '#default_value' => $cost_centre->cost_centre_desc,
-    '#weight' => -4,
+    '#title' => t('Amount'),
+    '#default_value' => number_format(check_plain($commerce_credit_voucher->amount) / 100, 2),
     '#required' => TRUE,
+  );
+
+  $form['sku'] = array(
+    '#type' => 'textfield',
+    '#title' => t('SKU'),
+    '#default_value' => check_plain($commerce_credit_voucher->sku),
+    '#autocomplete_path' => 'commerce_product/autocomplete/commerce_product/line_item_product_selector/product',
+  );
+
+  $form['is_active'] = array(
+    '#type' => 'radios',
+    '#title' => t('Active'),
+    '#default_value' => check_plain($commerce_credit_voucher->is_active),
+    '#options' => array('1' => t('Yes'), '0' => t('No')),
+  );
+
+  $form['start_date'] = array(
+    '#type' => 'date',
+    '#title' => t('Start Date'),
+    '#after_build' => array('commerce_credit_voucher_ui_custom_date_element'),
+    '#start_year' => date('Y'),
+    '#default_value' => array(
+      'year' => date('Y', check_plain($commerce_credit_voucher->start_date)),
+      'month' => date('m', check_plain($commerce_credit_voucher->start_date)),
+      'day' => date('d', check_plain($commerce_credit_voucher->start_date)),
+    ),
+  );
+
+  $form['end_date'] = array(
+    '#type' => 'date',
+    '#title' => t('End Date'),
+    '#after_build' => array('commerce_credit_voucher_ui_custom_date_element'),
+    '#start_year' => date('Y'),
+    '#default_value' => array(
+      'year' => date('Y', check_plain($commerce_credit_voucher->end_date)),
+      'month' => date('m', check_plain($commerce_credit_voucher->end_date)),
+      'day' => date('d', check_plain($commerce_credit_voucher->end_date)),
+    ),
   );
 
   // Add the buttons.
@@ -49,177 +92,104 @@ function cost_centre_form($form, &$form_state, $cost_centre) {
   $form['buttons']['#weight'] = 100;
   $form['buttons']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save'),
+    '#value' => t('Save credit voucher'),
     '#weight' => 5,
-    '#submit' => array('cost_centre_form_submit'),
+    '#submit' => array('commerce_credit_voucher_ui_form_submit'),
   );
-
-  if (!empty($cost_centre->cost_centre_id_pk)) {
-    $form['buttons']['delete'] = array(
-      '#access' => user_access('delete cost_centre'),
-      '#type' => 'submit',
-      '#value' => t('Delete'),
-      '#weight' => 15,
-      '#submit' => array('cost_centre_form_delete_submit'),
-    );
-  }
-
-  $form['#validate'][] = 'cost_centre_form_validate';
-  field_attach_form('cost_centre', $cost_centre, $form, $form_state);
 
   return $form;
 }
 
 
 /**
- * cost centre form valdation callback
- *
- * Tell the Field system to do its own validation.
+ * Submit callback for commerce_credit_voucher_ui_form().
  */
-function cost_centre_form_validate($form, &$form_state) {
-  $cost_centre = $form_state['cost_centre'];
+function commerce_credit_voucher_ui_form_submit($form, &$form_state) {
+  $commerce_credit_voucher = &$form_state['commerce_credit_voucher'];
 
-  $result = db_query('SELECT * FROM {cost_centre} WHERE cost_centre_code = :code AND cost_centre_id_pk <> :curid', array(
-    ':code' => $form_state['values']['cost_centre_code'],
-    ':curid' => $form_state['build_info']['args'][0]->cost_centre_id_pk
-  ));
+  $commerce_credit_voucher->code = $form_state['values']['code'];
+  $commerce_credit_voucher->amount = $form_state['values']['amount'] * 100;
+  $commerce_credit_voucher->sku = $form_state['values']['sku'];
+  $commerce_credit_voucher->is_active = $form_state['values']['is_active'];
+  $commerce_credit_voucher->start_date = strtotime($form_state['values']['start_date']['year'] . '-'. $form_state['values']['start_date']['month'] . '-' . $form_state['values']['start_date']['day'] . ' 00:00');
+  $commerce_credit_voucher->end_date = strtotime($form_state['values']['end_date']['year'] . '-'. $form_state['values']['end_date']['month'] . '-' . $form_state['values']['end_date']['day'] . ' 23:59:59');
+  $commerce_credit_voucher->changed = strtotime('now');
 
-  if(($result->rowCount()) > 0){
-    form_set_error('cost_centre_code', 'A Cost Centre with this code already exists.');
+  if ($commerce_credit_voucher->is_new) {
+    $commerce_credit_voucher->created = strtotime('now');
   }
 
-  // Field validation.
-  field_attach_form_validate('cost_centre', $cost_centre, $form, $form_state);
-}
-
-
-/**
- * Cost Centre form submit callback
- */
-function cost_centre_form_submit($form, &$form_state) {
-  global $user;
-  $cost_centre = &$form_state['cost_centre'];
-  // Set the cost centre's uid if it's being created at this time.
-  if (empty($cost_centre->uid)) {
-    $cost_centre->uid = $user->uid;
-  }
-  $cost_centre->cost_centre_code = $form_state['values']['cost_centre_code'];
-  $cost_centre->cost_centre_desc = $form_state['values']['cost_centre_desc'];
-  // Notify field widgets.
-  field_attach_submit('cost_centre', $cost_centre, $form, $form_state);
   // Save the cost centre.
-  cost_centre_save($cost_centre);
+  commerce_credit_voucher_save($commerce_credit_voucher);
+
   // Notify the user.
-  if($cost_centre->cost_centre_id_pk){
-    drupal_set_message(t('Cost Centre saved.'));
-    $form_state['redirect'] = 'cost-centre/' . $cost_centre->cost_centre_id_pk;
+  if ($commerce_credit_voucher->voucher_id) {
+    drupal_set_message(t('Credit Voucher saved.'));
+    watchdog('commerce_credit_voucher', 'Created credit voucher @voucher_id.', array('@voucher_id' => $commerce_credit_voucher->voucher_id), WATCHDOG_NOTICE);
+    $form_state['redirect'] = 'admin/commerce/credit-vouchers/' . $commerce_credit_voucher->voucher_id;
+  }
+  else {
+    drupal_set_message(t('Credit voucher could not be created.'), 'error');
   }
 
 }
 
 
 /**
- * Let the controller class do the hard work and
- * save the cost centre.
- */
-function cost_centre_save($cost_centre) {
-  return entity_get_controller('cost_centre')->save($cost_centre);
-}
-
-
-/**
- * Basically display a Cost Centre.
- */
-function cost_centre_page_view($cost_centre, $view_mode = 'full') {
-
-  // Remove previously built content, if exists.
-  $cost_centre->content = array();
-
-  if ($view_mode == 'teaser') {
-    $cost_centre->content['title'] = array(
-      '#markup' => filter_xss($cost_centre->title),
-      '#weight' => -5,
-    );
-  }
-  // Build fields content.
-  field_attach_prepare_view('cost_centre', array($cost_centre->cost_centre_id_pk => $cost_centre), $view_mode);
-  entity_prepare_view('cost_centre', array($cost_centre->cost_centre_id_pk => $cost_centre));
-  $cost_centre->content += field_attach_view('cost_centre', $cost_centre, $view_mode);
-
-  return $cost_centre->content;
-}
-
-
-/**
- * Cost centre edit page callback.
- */
-function cost_centre_page_edit($cost_centre) {
-  drupal_set_title(t('Edit @title', array('@title' => $cost_centre->cost_centre_desc)), PASS_THROUGH);
-  return drupal_get_form('cost_centre_form', $cost_centre);
-}
-
-
-/**
- * Form function to confirm deletion.
+ * Form callback wrapper: confirmation form for deleting a commerce credit voucher.
  *
- * Rather than build a complete form, we will simply
- * pass data on to a utility function of the Form API
- * called confirm_form().
+ * @param $commerce_credit_voucher
+ *   The commerce credit voucher object to delete through the form.
+ *
+ * @see commerce_credit_voucher_ui_credit_voucher_delete_form()
  */
-function cost_centre_delete_confirm($form, &$form_state, $cost_centre) {
-  $form['#cost_centre'] = $cost_centre;
+function commerce_credit_voucher_ui_credit_voucher_delete_form_wrapper($commerce_credit_voucher) {
+  drupal_set_title(t('<em>Delete Credit voucher</em> @voucher_id', array('@voucher_id' => check_plain($commerce_credit_voucher->voucher_id))), PASS_THROUGH);
+  return drupal_get_form('commerce_credit_voucher_ui_credit_voucher_delete_form', $commerce_credit_voucher);
+}
 
-  // Always provide entity id in the same form key as in the entity edit form.
-  $form['cost_centre_id_pk'] = array(
-    '#type' => 'value',
-    '#value' => $cost_centre->cost_centre_id_pk
-  );
 
-  return confirm_form(
-    $form,
-    t('Are you sure you want to delete %title?', array('%title' => $cost_centre->title)),
-    'cost-centre/' . $cost_centre->cost_centre_id_pk,
-    t('This action cannot be undone.'),
+/**
+ * Form callback: confirmation form for deleting a commerce credit voucher.
+ *
+ * @param $commerce_credit_voucher
+ *   The commerce credit voucher object to delete through the form.
+ *
+ * @return
+ *   The form array to add or edit a commerce credit voucher.
+ *
+ * @see confirm_form()
+ */
+function commerce_credit_voucher_ui_credit_voucher_delete_form($form, &$form_state, $commerce_credit_voucher) {
+  $form_state['commerce_credit_voucher'] = $commerce_credit_voucher;
+
+  $form['#submit'][] = 'commerce_credit_voucher_ui_credit_voucher_delete_form_submit';
+
+  $form = confirm_form($form,
+    t('Are you sure you want to delete credit voucher @voucher_id?', array('@voucher_id' => $commerce_credit_voucher->voucher_id)),
+    '',
+    '<p>' . t('Deleting this credit voucher cannot be undone.') . '</p>',
     t('Delete'),
-    t('Cancel')
+    t('Cancel'),
+    'confirm'
   );
+
+  return $form;
 }
 
 
 /**
- * Delete submit for Cost Centres
+ * Submit callback for commerce_credit_voucher_ui_credit_voucher_delete_form().
  */
-function cost_centre_form_delete_submit($form, &$form_state) {
-  $destination = array();
-  if (isset($_GET['destination'])) {
-    $destination = drupal_get_destination();
-    unset($_GET['destination']);
+function commerce_credit_voucher_ui_credit_voucher_delete_form_submit($form, &$form_state) {
+  $commerce_credit_voucher = $form_state['commerce_credit_voucher'];
+
+  // Notify the user.
+  if (commerce_credit_voucher_delete($commerce_credit_voucher->voucher_id)) {
+    drupal_set_message(t('Credit voucher @voucher_id has been deleted.', array('@voucher_id' => $commerce_credit_voucher->voucher_id)));
+    watchdog('commerce_credit_voucher', 'Deleted credit voucher @voucher_id.', array('@voucher_id' => $commerce_credit_voucher->voucher_id), WATCHDOG_NOTICE);
   }
-  $cost_centre = $form['#cost_centre'];
-  $form_state['redirect'] = array('cost-centre/' . $cost_centre->cost_centre_id_pk . '/delete', array('query' => $destination));
-}
-
-
-/**
- * Confirmation
- *  The submit callback handles deleting the cost centre.
- */
-function cost_centre_delete_confirm_submit($form, &$form_state) {
-  if ($form_state['values']['confirm']) {
-    $cost_centre = cost_centre_load($form_state['values']['cost_centre_id_pk']);
-    cost_centre_delete($form_state['values']['cost_centre_id_pk']);
-    watchdog('cost_centre', 'deleted %title.', array('%title' => $cost_centre->title));
+  else {
+    drupal_set_message(t('Credit voucher @voucher_id could not be deleted.', array('@voucher_id' => $commerce_credit_voucher->voucher_id)), 'error');
   }
-
-  drupal_set_message(t('%title has been deleted.', array('%title' => $cost_centre->title)));
-
-  $form_state['redirect'] = '<front>';
-}
-
-
-/**
- * The summary page for cost centres.
- */
-function cost_centre_information() {
-  return 'Information';
 }
