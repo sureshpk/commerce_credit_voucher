@@ -417,25 +417,3 @@ function commerce_credit_voucher_is_invalid($code, $order) {
 
   return !empty($errors) ? $errors : FALSE;
 }
-
-
-/**
- * Implements of hook_feeds_plugins().
- */
-function commerce_credit_voucher_feeds_plugins() {
-  $plugins = array();
-
-  $plugins['FeedsCommerceCreditVoucherProcessor'] = array(
-    'name' => 'Commerce Credit Voucher processor',
-    'description' => 'Create and update credit vouchers.',
-    'help' => 'Create and update credit vouchers from parsed content.',
-    'handler' => array(
-      'parent' => 'FeedsProcessor',
-      'class' => 'FeedsCommerceCreditVoucherProcessor',
-      'file' => 'FeedsCommerceCreditVoucherProcessor.inc',
-      'path' => drupal_get_path('module', 'commerce_credit_voucher') . '/includes/feeds',
-    ),
-  );
-
-  return $plugins;
-}

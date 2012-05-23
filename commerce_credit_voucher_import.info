@@ -1,0 +1,9 @@
+name = Credit Voucher Payment Method Feeds Import
+description = Integrates Commerce Credit Voucher Payment Method with Feeds.
+package = Commerce
+dependencies[] = commerce_credit_voucher
+dependencies[] = feeds
+core = 7.x
+
+; Files
+files[] = commerce_credit_voucher_import.module
