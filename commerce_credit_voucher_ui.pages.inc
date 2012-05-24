@@ -193,3 +193,30 @@ function commerce_credit_voucher_ui_credit_voucher_delete_form_submit($form, &$f
     drupal_set_message(t('Credit voucher @voucher_id could not be deleted.', array('@voucher_id' => $commerce_credit_voucher->voucher_id)), 'error');
   }
 }
+
+
+/**
+ * Menu callback: display an overview of available types.
+ */
+function commerce_credit_voucher_ui_credit_voucher_types_overview() {
+  $header = array(
+    t('Name'),
+    t('Operations'),
+  );
+
+  $rows = array();
+
+  // Loop through all defined commerce credit voucher types.
+  foreach (commerce_credit_voucher_types() as $type => $info) {
+    // Build the operation links for the current commerce credit voucher type.
+    $links = menu_contextual_links('commerce-credit-voucher-type', 'admin/commerce/credit-vouchers/types', array(strtr($type, array('_' => '-'))));
+
+    // Add the commerce credit voucher type's row to the table's rows array.
+    $rows[] = array(
+      theme('commerce_credit_voucher_type_admin_overview', array('credit_voucher_type' => $info)),
+      theme('links', array('links' => $links, 'attributes' => array('class' => 'links inline operations'))),
+    );
+  }
+
+  return theme('table', array('header' => $header, 'rows' => $rows));
+}

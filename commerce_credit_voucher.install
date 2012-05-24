@@ -17,6 +17,13 @@ function commerce_credit_voucher_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'type' => array(
+        'description' => 'The type of the voucher.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
       'code' => array(
         'description' => 'The voucher code.',
         'type' => 'varchar',

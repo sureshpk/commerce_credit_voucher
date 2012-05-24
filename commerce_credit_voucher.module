@@ -22,12 +22,21 @@ function commerce_credit_voucher_entity_info() {
     'label' => t('Commerce Credit Voucher'),
     'controller class' => 'CommerceCreditVoucherEntityController',
     'base table' => 'commerce_credit_voucher',
-    'uri callback' => 'commerce_credit_voucher_uri',
+    'fieldable' => TRUE,
     'entity keys' => array(
       'id' => 'voucher_id',
     ),
+    'bundle keys' => array(
+      'bundle' => 'type',
+    ),
     'bundles' => array(),
   );
+
+  foreach (commerce_credit_voucher_types() as $type => $info) {
+    $entity_info['commerce_credit_voucher']['bundles'][$type] = array(
+      'label' => $info->name,
+    );
+  }
 
   return $entity_info;
 }
@@ -47,6 +56,45 @@ function commerce_credit_voucher_uri($commerce_credit_voucher) {
   }
 
   return NULL;
+}
+
+
+/**
+ * Returns an array of commerce credit vouchers types with a type key
+ * name and description.
+ */
+function commerce_credit_voucher_types() {
+  $types = &drupal_static(__FUNCTION__);
+
+  if (empty($types)) {
+    $types['fixed_amount'] = (object) array(
+      'type' => 'fixed_amount',
+      'name' => t('Fixed Amount'),
+      'description' => t('A fixed amount credit voucher.')
+    );
+    $types['percentage'] = (object) array(
+      'type' => 'percentage',
+      'name' => t('Percentage'),
+      'description' => t('A percentage credit voucher.')
+    );
+  }
+
+  return $types;
+}
+
+
+/**
+ * Loads a commerce credit voucher type.
+ *
+ * @param $type
+ *   The machine-readable name of the commerce credit voucher type; accepts normal
+ *   machine names and URL prepared machine names with underscores replaced by
+ *   hyphens.
+ */
+function commerce_credit_voucher_type_load($type) {
+  $type = strtr($type, array('-' => '_'));
+  $credit_voucher_types = commerce_credit_voucher_types();
+  return !empty($credit_voucher_types[$type]) ? $credit_voucher_types[$type] : FALSE;
 }
 
 

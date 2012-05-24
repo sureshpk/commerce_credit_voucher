@@ -3,7 +3,31 @@
  * @file
  * Provides a UI functionality for the credit voucher payment method module.
  */
- 
+
+/**
+ * Implements hook_views_api().
+ */
+function commerce_credit_voucher_ui_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'commerce_credit_voucher') . '/includes/views',
+  );
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_credit_voucher_ui_theme() {
+  return array(
+    'commerce_credit_voucher_type_admin_overview' => array(
+      'variables' => array('type' => NULL),
+      'file' => 'commerce_credit_voucher_ui.theme.inc',
+    ),
+  );
+}
+
+
 /**
  * Implementation of hook_menu().
  */
@@ -52,7 +76,40 @@ function commerce_credit_voucher_ui_menu() {
     'file' => 'commerce_credit_voucher_ui.pages.inc',
   );
 
+  $items['admin/commerce/credit-vouchers/types'] = array(
+    'title' => 'Credit voucher types',
+    'description' => 'Manage credit voucher types for your store.',
+    'page callback' => 'commerce_credit_voucher_ui_credit_voucher_types_overview',
+    'access callback' => 'commerce_credit_voucher_access',
+    'access arguments' => array('administer'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+    'file' => 'commerce_credit_voucher_ui.pages.inc',
+  );
+
+  foreach (commerce_credit_voucher_types() as $type => $info) {
+    $items['admin/commerce/credit-vouchers/types/' . strtr($type, '_', '-')] = array(
+      'title' => $info->name,
+      'page callback' => 'commerce_credit_voucher_ui_credit_voucher_type_redirect',
+      'page arguments' => array($type),
+      'access callback' => 'commerce_credit_voucher_access',
+      'access arguments' => array('administer'),
+    );
+  }
+
   return $items;
+}
+
+
+/**
+ * Implements hook_menu_alter().
+ */
+function commerce_credit_voucher_ui_menu_alter(&$items) {
+  // Transform the field UI tabs into contextual links.
+  foreach (commerce_credit_voucher_types() as $type => $info) {
+    $items['admin/commerce/credit-vouchers/types/' . strtr($type, '_', '-') . '/fields']['context'] = MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE;
+    $items['admin/commerce/credit-vouchers/types/' . strtr($type, '_', '-') . '/display']['context'] = MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE;
+  }
 }
 
 
@@ -74,11 +131,41 @@ function commerce_credit_voucher_ui_menu_local_tasks_alter(&$data, $router_item,
 
 
 /**
+ * Implements hook_form_alter().
+ */
+function commerce_credit_voucher_ui_form_alter(&$form, &$form_state, $form_id) {
+  // On field administration forms for commerce credit voucher types add a breadcrumb.
+  if (in_array($form_id, array('field_ui_field_overview_form', 'field_ui_display_overview_form'))) {
+    if ($form['#entity_type'] == 'commerce_credit_voucher') {
+      // Load the commerce credit voucher type being modified for this form.
+      $credit_voucher_type = commerce_credit_voucher_type_load($form['#bundle']);
+
+      // Set the title
+      drupal_set_title($credit_voucher_type->name);
+
+      // Tweak the breadcrumb.
+      commerce_credit_voucher_ui_set_breadcrumb(TRUE);
+    }
+  }
+}
+
+
+/**
  * Implements hook_entity_info_alter().
  */
 function commerce_credit_voucher_ui_entity_info_alter(&$entity_info) {
   // Add a URI callback to the commerce credit voucher entity.
   $entity_info['commerce_credit_voucher']['uri callback'] = 'commerce_credit_voucher_ui_credit_voucher_uri';
+
+  // Expose the admin UI for commerce credit voucher fields.
+  foreach ($entity_info['commerce_credit_voucher']['bundles'] as $type => &$bundle) {
+    $bundle['admin'] = array(
+      'path' => 'admin/commerce/credit-vouchers/types/' . strtr($type, '_', '-'),
+      'real path' => 'admin/commerce/customer-profiles/types/' . strtr($type, '_', '-'),
+      'access callback' => 'commerce_credit_voucher_access',
+      'access arguments' => array('administer'),
+    );
+  }
 }
 
 
@@ -120,6 +207,38 @@ function commerce_credit_voucher_ui_credit_voucher_title($commerce_credit_vouche
 
 
 /**
+ * Menu item access callback: redirects a commerce credit voucher type URL to its fields
+ * management page.
+ */
+function commerce_credit_voucher_ui_credit_voucher_type_redirect($type) {
+  drupal_goto('admin/commerce/credit-vouchers/types/' . strtr($type, '_', '-') . '/fields');
+}
+
+
+/**
+ * Sets the breadcrumb for administrative pages.
+ *
+ * @param $credit_voucher_types
+ *   TRUE or FALSE indicating whether or not the breadcrumb should include the
+ *   commerce credit voucher types administrative page.
+ */
+function commerce_credit_voucher_ui_set_breadcrumb($credit_voucher_types = FALSE) {
+  $breadcrumb = array(
+    l(t('Home'), '<front>'),
+    l(t('Administration'), 'admin'),
+    l(t('Store'), 'admin/commerce'),
+    l(t('Credit vouchers'), 'admin/commerce/credit-vouchers'),
+  );
+
+  if ($credit_voucher_types) {
+    $breadcrumb[] = l(t('Credit voucher types'), 'admin/commerce/credit-vouchers/types');
+  }
+
+  drupal_set_breadcrumb($breadcrumb);
+}
+
+
+/**
  * Date form element callback: sets a start and end date of a date element.
  */
 function commerce_credit_voucher_ui_custom_date_element($form_element) {
@@ -129,15 +248,4 @@ function commerce_credit_voucher_ui_custom_date_element($form_element) {
   $form_element['year']['#options'] = drupal_map_assoc(range($start_year, $end_year));
 
 	return $form_element;
-}
-
-
-/**
- * Implements hook_views_api().
- */
-function commerce_credit_voucher_ui_views_api() {
-  return array(
-    'api' => 3,
-    'path' => drupal_get_path('module', 'commerce_credit_voucher') . '/includes/views',
-  );
 }

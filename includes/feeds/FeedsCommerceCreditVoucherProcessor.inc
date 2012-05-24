@@ -81,11 +81,15 @@ class FeedsCommerceCreditVoucherProcessor extends FeedsProcessor {
   public function getMappingTargets() {
     $targets = parent::getMappingTargets();
     $targets += array(
+      'type' => array(
+        'name' => t('Type'),
+        'description' => t('The credit voucher type.'),
+      ),
       'code' => array(
         'name' => t('Code'),
         'description' => t('The credit voucher code.'),
         'optional_unique' => TRUE,
-       ),
+      ),
       'amount' => array(
         'name' => t('Amount'),
         'description' => t('How much the voucher is worth.'),

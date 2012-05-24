@@ -58,31 +58,36 @@ function commerce_credit_voucher_import_feeds_importer_default() {
       'config' => array(
         'mappings' => array(
           0 => array(
+            'source' => 'type',
+            'target' => 'type',
+            'unique' => FALSE,
+          ),
+          1 => array(
             'source' => 'code',
             'target' => 'code',
             'unique' => 1,
           ),
-          1 => array(
+          2 => array(
             'source' => 'amount',
             'target' => 'amount',
             'unique' => FALSE,
           ),
-          2 => array(
+          3 => array(
             'source' => 'sku',
             'target' => 'sku',
             'unique' => FALSE,
           ),
-          3 => array(
+          4 => array(
             'source' => 'is_active',
             'target' => 'is_active',
             'unique' => FALSE,
           ),
-          4 => array(
+          5 => array(
             'source' => 'start_date',
             'target' => 'start_date',
             'unique' => FALSE,
           ),
-          5 => array(
+          6 => array(
             'source' => 'end_date',
             'target' => 'end_date',
             'unique' => FALSE,
