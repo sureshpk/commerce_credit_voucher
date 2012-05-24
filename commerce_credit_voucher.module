@@ -64,20 +64,53 @@ function commerce_credit_voucher_uri($commerce_credit_voucher) {
  * name and description.
  */
 function commerce_credit_voucher_types() {
-  $types = &drupal_static(__FUNCTION__);
+  // First check the static cache for a commerce credit voucher types array.
+  $credit_voucher_types = &drupal_static(__FUNCTION__);
 
-  if (empty($types)) {
-    $types['fixed_amount'] = (object) array(
-      'type' => 'fixed_amount',
-      'name' => t('Fixed Amount'),
-      'description' => t('A fixed amount credit voucher.')
-    );
-    $types['percentage'] = (object) array(
-      'type' => 'percentage',
-      'name' => t('Percentage'),
-      'description' => t('A percentage credit voucher.')
-    );
+  // If it did not exist, fetch the types now.
+  if (!isset($credit_voucher_types)) {
+
+    // Find commerce credit voucher types defined by hook_commerce_customer_profile_type_info().
+    foreach (module_implements('commerce_credit_voucher_type_info') as $module) {
+      foreach (module_invoke($module, 'commerce_credit_voucher_type_info') as $type => $info) {
+        // Initialize commerce credit voucher type properties.
+        $defaults = array(
+          'module' => $module,
+        );
+
+        $credit_voucher_types[$type] = (object) array_merge($defaults, $info);
+      }
+    }
+
+    // Last allow the info to be altered by other modules.
+    drupal_alter('commerce_credit_voucher_type_info', $credit_voucher_types);
+
   }
+
+  return $credit_voucher_types;
+}
+
+
+/**
+ * Defines the basic commerce credit voucher types using
+ * hook_commerce_credit_voucher_type_info() implemented by this module.
+ *
+ * @see commerce_credit_voucher_types().
+ */
+function commerce_credit_voucher_commerce_credit_voucher_type_info() {
+  $types = array();
+
+  $types['fixed_amount'] = array(
+    'type' => 'fixed_amount',
+    'name' => t('Fixed Amount'),
+    'description' => t('A fixed amount credit voucher.')
+  );
+
+  $types['percentage'] = array(
+    'type' => 'percentage',
+    'name' => t('Percentage'),
+    'description' => t('A percentage credit voucher.')
+  );
 
   return $types;
 }
