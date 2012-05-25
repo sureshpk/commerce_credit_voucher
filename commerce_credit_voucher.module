@@ -408,11 +408,7 @@ function commerce_credit_voucher_transaction($payment_method, $order, $charge, $
   $transaction->message = 'Voucher Code: @code';
   $transaction->message_variables = array('@code' => $commerce_credit_voucher->code, '@sku' => $commerce_credit_voucher->sku);
 
-  // Make sure the credit voucher is flagged as inactive.
-  if (commerce_payment_transaction_save($transaction)) {
-    $commerce_credit_voucher->is_active = FALSE;
-    commerce_credit_voucher_save($commerce_credit_voucher);
-  }
+  commerce_payment_transaction_save($transaction);
 }
 
 
@@ -430,71 +426,211 @@ function commerce_credit_voucher_transaction($payment_method, $order, $charge, $
 function commerce_credit_voucher_is_invalid($code, $order) {
   $errors = array();
 
-  // Check whether the voucher exists and is active.
-  if (!commerce_credit_voucher_load_by_code($code, TRUE, FALSE)) {
-    $errors[] = 'The credit voucher entered does not exist.';
-  }
-  else {
-    // Check whether the voucher can be used now (test the date range).
-    $commerce_credit_voucher = commerce_credit_voucher_load_by_code($code, TRUE, TRUE);
-    if (!$commerce_credit_voucher) {
-      $errors[] = 'The credit voucher entered either is not available yet or has expired.';
-    }
-
-    // Check if the credit voucher amount is greater than zero.
-    $commerce_credit_voucher = commerce_credit_voucher_load_by_code($code, TRUE, FALSE);
-    if ($commerce_credit_voucher->amount <= 0) {
-      $errors[] = 'The credit voucher entered is invalid because its amount is 0.00.';
-    }
+  // Most basic validation ever.
+  if (!commerce_credit_voucher_check_credit_voucher_is_active($code)) {
+    $errors[] = 'Unable to process the credit voucher entered because it does not exist.';
   }
 
-  // Only do all this extra checks if there is no errors so far and the credit voucher has a SKU code.
-  if (empty($errors) && trim($commerce_credit_voucher->sku) != '') {
-
-    $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-
-    // List of line items in the cart.
-    $commerce_line_items = $order_wrapper->commerce_line_items;
-
-    // List of SKU codes with quantities.
-    $product_quantities = array();
-
-    foreach ($commerce_line_items as $commerce_line_item) {
-      $product = $commerce_line_item->commerce_product->value();
-      if (!isset($product_quantities[$product->sku])) {
-        $product_quantities[$product->sku] = 0;
-      }
-      $product_quantities[$product->sku] += $commerce_line_item->quantity->value();
+  // Still pretty basic validation.
+  if (empty($errors)) {
+    if (!commerce_credit_voucher_check_credit_voucher_dates($code)) {
+      $errors[] = 'Unable to process the credit voucher entered because it is either not available yet or expired.';
     }
+    if (!commerce_credit_voucher_check_credit_voucher_amount($code)) {
+      $errors[] = 'Unable to process the credit voucher entered because its amount is invalid.';
+    }
+    if (commerce_credit_voucher_get_number_of_uses_for_credit_voucher($code) <= 0) {
+       $errors[] = 'Unable to process the credit voucher entered because its maximum number of uses has already been reached.';
+    }
+  }
 
-    // Check whether the SKU on the voucher is in the cart. If it is, check the product quantity against the number of used vouchers.
-    if (!isset($product_quantities[$commerce_credit_voucher->sku])) {
+  // Now that we know that the voucher exists and is valid, load it.
+  $commerce_credit_voucher = commerce_credit_voucher_load_by_code($code, TRUE, TRUE);
+
+  // More complex validation if there is no errors so far.
+  if (empty($errors)) {
+    if (commerce_credit_voucher_get_number_of_uses_for_credit_voucher($code, $order) != $commerce_credit_voucher->number_of_uses) {
+       $errors[] = 'Unable to process the credit voucher entered because it has already been used in this order.';
+    }
+  }
+
+  // Even more complex validation if there is no errors so far.
+  if (empty($errors)) {
+    // Get a list of SKU codes.
+    $sku_codes = explode(',', $commerce_credit_voucher->sku);
+
+    // Check if any product associated with the voucher is in the cart.
+    if (!commerce_credit_voucher_check_products_exist_in_order($sku_codes, $order)) {
       $errors[] = 'Unable to process the credit voucher entered because the product associated with it is not in the cart.';
     }
-    else {
-      // List of transactions for the order.
-      $commerce_payment_transactions = commerce_payment_transaction_load_multiple(NULL, array('order_id' => $order_wrapper->order_id->value(), 'payment_method' => 'commerce_credit_voucher'));
-
-      foreach ($commerce_payment_transactions as $commerce_payment_transaction) {
-        $sku = $commerce_payment_transaction->message_variables['@sku'];
-
-        // Check to see if there is a product in the cart with the same SKU code.
-        if (isset($product_quantities[$sku])) {
-          $product_quantity = $product_quantities[$sku];
-          $product_quantities[$sku] = $product_quantities[$sku] - 1;
-        }
-        else {
-          // TODO: User has payed for a product that is no longer in the cart.
-        }
-      }
-
-      // Check whether the voucher can be used because of the product quantity.
-      if ($product_quantities[$commerce_credit_voucher->sku] == 0) {
-        $errors[] = 'Sorry but only one credit voucher is allowed per product.';
-      }
-    }
-
   }
 
   return !empty($errors) ? $errors : FALSE;
+}
+
+
+/**
+ * Checks if a given credit voucher exists and is active.
+ *
+ * @param $code
+ *   The credit voucher code to validate.
+ *
+ * @return boolean
+ *   Returns TRUE or FALSE.
+ */
+function commerce_credit_voucher_check_credit_voucher_is_active($code) {
+  $commerce_credit_voucher = commerce_credit_voucher_load_by_code($code, TRUE, FALSE);
+  return !empty($commerce_credit_voucher);
+}
+
+
+/**
+ * Checks if a given credit voucher exists and can be used now (check date range).
+ *
+ * @param $code
+ *   The credit voucher code to validate.
+ *
+ * @return boolean
+ *   Returns TRUE or FALSE.
+ */
+function commerce_credit_voucher_check_credit_voucher_dates($code) {
+  $commerce_credit_voucher = commerce_credit_voucher_load_by_code($code, TRUE, TRUE);
+  return !empty($commerce_credit_voucher);
+}
+
+
+/**
+ * Checks if a given credit voucher exists and its amount is greater than zero.
+ *
+ * @param $code
+ *   The credit voucher code to validate.
+ *
+ * @return boolean
+ *   Returns TRUE or FALSE.
+ */
+function commerce_credit_voucher_check_credit_voucher_amount($code) {
+  $commerce_credit_voucher = commerce_credit_voucher_load_by_code($code, TRUE, FALSE);
+  return ($commerce_credit_voucher->amount > 0);
+}
+
+
+/**
+ * Check whether at least one SKU code of a given list is in the cart.
+ *
+ * @param $sku_codes
+ *   An array of SKU codes.
+ * @param $order
+ *   The order object.
+ *
+ * @return boolean
+ *   Returns TRUE or FALSE.
+ */
+function commerce_credit_voucher_check_products_exist_in_order($sku_codes, $order) {
+  // Get a list of products in the cart with the specific quantities.
+  $product_quantities = commerce_credit_voucher_get_product_quantities_for_order($order);
+
+  // Loop over the list of SKU codes and check whether the products are in the cart.
+  foreach ($sku_codes as $sku_code) {
+    if (isset($product_quantities[trim($sku_code)])) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+
+/**
+ * Calculates how many times a credit voucher can still be used.
+ *
+ * @param $code
+ *   The credit voucher code.
+ * @param $order
+ *   The order object (optional).
+ *
+ * @return integer
+ *   Returns the number of times a credit voucher can still be used.
+ */
+function commerce_credit_voucher_get_number_of_uses_for_credit_voucher($code, $order = NULL) {
+  // Get a list of credit vouchers used in this order.
+  $credit_voucher_quantities = commerce_credit_voucher_get_credit_vouchers_for_order($order);
+
+  // Load a fresh credit voucher.
+  $commerce_credit_voucher = commerce_credit_voucher_load_by_code($code, TRUE, TRUE);
+
+  if (isset($credit_voucher_quantities[$code])) {
+    $number_of_uses = $commerce_credit_voucher->number_of_uses - $credit_voucher_quantities[$code];
+  }
+  else {
+    $number_of_uses = $commerce_credit_voucher->number_of_uses;
+  }
+
+  return $number_of_uses;
+}
+
+
+/**
+ * Builds an array of products and quantities for a given order.
+ *
+ * @param $order
+ *   The order object.
+ *
+ * @return array
+ *   Returns an array of products with SKU as keys and quantities as values.
+ */
+function commerce_credit_voucher_get_product_quantities_for_order($order) {
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+
+  // List of line items in the cart.
+  $commerce_line_items = $order_wrapper->commerce_line_items;
+
+  // List of SKU codes with quantities.
+  $product_quantities = array();
+
+  foreach ($commerce_line_items as $commerce_line_item) {
+    $product = $commerce_line_item->commerce_product->value();
+    if (!isset($product_quantities[$product->sku])) {
+      $product_quantities[$product->sku] = 0;
+    }
+    $product_quantities[$product->sku] += $commerce_line_item->quantity->value();
+  }
+
+  return $product_quantities;
+}
+
+
+/**
+ * Builds an array of credit vouchers and number of times they have been used.
+ *
+ * @param $order
+ *   The order object (optional).
+ *
+ * @return array
+ *   Returns an array of credit vouchers with code as keys and number of times
+ *   they have been used as values.
+ */
+function commerce_credit_voucher_get_credit_vouchers_for_order($order = NULL) {
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+
+  // Build an array of conditions to be used when filtering the transactions.
+  $conditions = array('payment_method' => 'commerce_credit_voucher');
+  if ($order) {
+    $conditions['order_id'] = $order_wrapper->order_id->value();
+  }
+
+  // List of transactions for the order.
+  $commerce_payment_transactions = commerce_payment_transaction_load_multiple(NULL, $conditions);
+
+  // List of credit vouchers with number of uses.
+  $credit_voucher_quantities = array();
+
+  foreach ($commerce_payment_transactions as $commerce_payment_transaction) {
+    $code = $commerce_payment_transaction->message_variables['@code'];
+    if (!isset($credit_voucher_quantities[$code])) {
+      $credit_voucher_quantities[$code] = 0;
+    }
+    $credit_voucher_quantities[$code]++;
+  }
+
+  return $credit_voucher_quantities;
 }

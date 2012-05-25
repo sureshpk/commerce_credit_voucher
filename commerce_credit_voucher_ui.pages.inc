@@ -52,6 +52,7 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
   $form['sku'] = array(
     '#type' => 'textfield',
     '#title' => t('SKU'),
+    '#description' =>t('If you leave this field empty, the discount will be applied to the whole cart.'),
     '#default_value' => check_plain($commerce_credit_voucher->sku),
     '#autocomplete_path' => 'commerce_product/autocomplete/commerce_product/line_item_product_selector/product',
   );

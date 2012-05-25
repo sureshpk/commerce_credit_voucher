@@ -24,6 +24,7 @@ class CommerceCreditVoucherEntityController extends DrupalCommerceEntityControll
       'code' => '',
       'amount' => NULL,
       'sku' => '',
+      'number_of_uses' => 1,
       'is_active' => 1,
       'start_date' => strtotime('now'),
       'end_date' => strtotime('now'),

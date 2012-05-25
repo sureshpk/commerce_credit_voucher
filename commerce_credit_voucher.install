@@ -46,6 +46,12 @@ function commerce_credit_voucher_schema() {
         'not null' => FALSE,
         'default' => '',
       ),
+      'number_of_uses' => array(
+        'description' => 'The number of times the voucher can be used.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
       'is_active' => array(
         'description' => 'Indicates whether this voucher is active or not.',
         'type' => 'int',
