@@ -93,6 +93,24 @@ function commerce_credit_voucher_ui_views_data() {
     ),
   );
 
+  $data['commerce_credit_voucher']['number_of_uses'] = array(
+    'title' => t('Number of uses'),
+    'help' => t('How many times the credit voucher can be used.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
+
   $data['commerce_credit_voucher']['is_active'] = array(
     'title' => t('Status'),
     'help' => t('Whether the credit voucher is active or not.'),

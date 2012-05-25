@@ -5,6 +5,34 @@
  */
 
 /**
+ * Returns HTML for a list of available commerce credit voucher types.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - credit_voucher_type: An array of info about a particular commerce
+ *     credit voucher type.
+ *
+ * @ingroup themeable
+ */
+function theme_commerce_credit_voucher_type_add_page($variables) {
+  $credit_voucher_types = $variables['credit_voucher_types'];
+
+  if ($credit_voucher_types) {
+    $output = '<dl class="credit-voucher-type-list">';
+
+    foreach ($credit_voucher_types as $type => $info) {
+      $output .= '<dt>' . l($info->name, 'admin/commerce/credit-vouchers/add/' . strtr($type, '_', '-')) . '</dt>';
+      $output .= '<dd>' . filter_xss_admin($info->description) . '</dd>';
+    }
+
+    $output .= '</dl>';
+  }
+
+  return $output;
+}
+
+
+/**
  * Builds an overview of a commerce credit voucher type for display to an administrator.
  *
  * @param $variables

@@ -25,11 +25,22 @@ function commerce_credit_voucher_entity_info() {
     'fieldable' => TRUE,
     'entity keys' => array(
       'id' => 'voucher_id',
+      'bundle' => 'type',
     ),
     'bundle keys' => array(
       'bundle' => 'type',
     ),
     'bundles' => array(),
+    'view modes' => array(
+      'full' => array(
+        'label' => t('Full content'),
+        'custom settings' => FALSE,
+      ),
+      'teaser' => array(
+        'label' => t('Teaser'),
+        'custom settings' => FALSE,
+      ),
+    ),
   );
 
   foreach (commerce_credit_voucher_types() as $type => $info) {
@@ -273,11 +284,14 @@ function commerce_credit_voucher_access($op, $commerce_credit_voucher = NULL, $a
 /**
  * Returns an initialized commerce credit voucher object.
  *
+ * @param $type
+ *   The commerce credit voucher type.
+ *
  * @return
  *   A commerce credit voucher object with all default fields initialized.
  */
-function commerce_credit_voucher_new() {
-  return entity_get_controller('commerce_credit_voucher')->create();
+function commerce_credit_voucher_new($type = '') {
+  return entity_get_controller('commerce_credit_voucher')->create(array('type' => $type));
 }
 
 
@@ -549,7 +563,7 @@ function commerce_credit_voucher_check_products_exist_in_order($sku_codes, $orde
  *   The order object (optional).
  *
  * @return integer
- *   Returns the number of times a credit voucher can still be used.
+ *   Returns how many times a credit voucher can still be used.
  */
 function commerce_credit_voucher_get_number_of_uses_for_credit_voucher($code, $order = NULL) {
   // Get a list of credit vouchers used in this order.
@@ -600,13 +614,13 @@ function commerce_credit_voucher_get_product_quantities_for_order($order) {
 
 
 /**
- * Builds an array of credit vouchers and number of times they have been used.
+ * Builds an array of credit vouchers and how many times they have been used.
  *
  * @param $order
  *   The order object (optional).
  *
  * @return array
- *   Returns an array of credit vouchers with code as keys and number of times
+ *   Returns an array of credit vouchers with code as keys and how many times
  *   they have been used as values.
  */
 function commerce_credit_voucher_get_credit_vouchers_for_order($order = NULL) {

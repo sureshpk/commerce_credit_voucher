@@ -20,6 +20,10 @@ function commerce_credit_voucher_ui_views_api() {
  */
 function commerce_credit_voucher_ui_theme() {
   return array(
+    'commerce_credit_voucher_type_add_page' => array(
+      'variables' => array('types' => NULL),
+      'file' => 'commerce_credit_voucher_ui.theme.inc',
+    ),
     'commerce_credit_voucher_type_admin_overview' => array(
       'variables' => array('type' => NULL),
       'file' => 'commerce_credit_voucher_ui.theme.inc',
@@ -29,7 +33,23 @@ function commerce_credit_voucher_ui_theme() {
 
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_forms().
+ */
+function commerce_credit_voucher_ui_forms($form_id, $args) {
+  $forms = array();
+
+  if ($credit_voucher_types = commerce_credit_voucher_types()) {
+    foreach ($credit_voucher_types as $type => $info) {
+      $forms['commerce_credit_voucher_ui_' . $type . '_credit_voucher_form']['callback'] = 'commerce_credit_voucher_ui_form';
+    }
+  }
+
+  return $forms;
+}
+
+
+/**
+ * Implements hook_menu().
  */
 function commerce_credit_voucher_ui_menu() {
   $items = array();
@@ -38,16 +58,31 @@ function commerce_credit_voucher_ui_menu() {
 
   $items['admin/commerce/credit-vouchers/add'] = array(
     'title' => 'Create a credit voucher',
-    'page callback' => 'commerce_credit_voucher_ui_form_wrapper',
-    'page arguments' => array(commerce_credit_voucher_new()),
+    'page callback' => 'commerce_credit_voucher_ui_add_page',
     'access callback' => 'commerce_credit_voucher_access',
     'access arguments' => array('create'),
     'weight' => 10,
     'file' => 'commerce_credit_voucher_ui.pages.inc',
   );
 
+  foreach (commerce_credit_voucher_types() as $type => $info) {
+    $items['admin/commerce/credit-vouchers/add/' . strtr($type, '_', '-')] = array(
+      'title' => 'Create Credit Voucher',
+      'title callback' => 'commerce_credit_voucher_ui_add_credit_voucher_title',
+      'title arguments' => array(4),
+      'description' => $info->description,
+      'description callback' => 'filter_xss_admin',
+      'page callback' => 'commerce_credit_voucher_ui_form_wrapper',
+      'page arguments' => array(commerce_credit_voucher_new($type)),
+      'access callback' => 'commerce_credit_voucher_access',
+      'access arguments' => array('create'),
+      'weight' => 10,
+      'file' => 'commerce_credit_voucher_ui.pages.inc',
+    );
+  }
+
   $items['admin/commerce/credit-vouchers/%commerce_credit_voucher'] = array(
-    'title callback' => 'commerce_credit_voucher_ui_credit_voucher_title',
+    'title callback' => 'commerce_credit_voucher_ui_edit_credit_voucher_title',
     'title arguments' => array(3),
     'page callback' => 'commerce_credit_voucher_ui_form_wrapper',
     'page arguments' => array(3),
@@ -161,7 +196,7 @@ function commerce_credit_voucher_ui_entity_info_alter(&$entity_info) {
   foreach ($entity_info['commerce_credit_voucher']['bundles'] as $type => &$bundle) {
     $bundle['admin'] = array(
       'path' => 'admin/commerce/credit-vouchers/types/' . strtr($type, '_', '-'),
-      'real path' => 'admin/commerce/customer-profiles/types/' . strtr($type, '_', '-'),
+      'real path' => 'admin/commerce/credit-vouchers/types/' . strtr($type, '_', '-'),
       'access callback' => 'commerce_credit_voucher_access',
       'access arguments' => array('administer'),
     );
@@ -193,15 +228,30 @@ function commerce_credit_voucher_ui_credit_voucher_uri($commerce_credit_voucher)
 
 
 /**
- * Menu item title callback: returns the number of an order for its pages.
+ * Menu item title callback: TODO.
  *
  * @param $commerce_credit_voucher
  *   The commerce credit voucher object as loaded via the URL wildcard.
  *
  * @return
- *   A page title of the format "Credit voucher ##".
+ *   A page title of the format "Create ## credit voucher".
  */
-function commerce_credit_voucher_ui_credit_voucher_title($commerce_credit_voucher) {
+function commerce_credit_voucher_ui_add_credit_voucher_title($type) {
+  $credit_voucher_type = commerce_credit_voucher_type_load($type);
+  return t('Create a @name credit voucher', array('@name' => strtolower($credit_voucher_type->name)));
+}
+
+
+/**
+ * Menu item title callback: TODO.
+ *
+ * @param $commerce_credit_voucher
+ *   The commerce credit voucher object as loaded via the URL wildcard.
+ *
+ * @return
+ *   A page title of the format "Edit Credit voucher ##".
+ */
+function commerce_credit_voucher_ui_edit_credit_voucher_title($commerce_credit_voucher) {
   return t('Edit Credit voucher @voucher_id', array('@voucher_id' => $commerce_credit_voucher->voucher_id));
 }
 

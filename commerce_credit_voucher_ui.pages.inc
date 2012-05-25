@@ -5,6 +5,14 @@
  */
 
 /**
+ * Menu callback: display a list of available types.
+ */
+function commerce_credit_voucher_ui_add_page() {
+  return theme('commerce_credit_voucher_type_add_page', array('credit_voucher_types' => commerce_credit_voucher_types()));
+}
+
+
+/**
  * Form callback wrapper: create or edit a commerce credit voucher.
  *
  * @param $commerce_credit_voucher
@@ -16,7 +24,7 @@ function commerce_credit_voucher_ui_form_wrapper($commerce_credit_voucher) {
   if ($commerce_credit_voucher->voucher_id) {
     drupal_set_title(t('<em>Edit Credit voucher</em> @voucher_id', array('@voucher_id' => check_plain($commerce_credit_voucher->voucher_id))), PASS_THROUGH);
   }
-  return drupal_get_form('commerce_credit_voucher_ui_form', $commerce_credit_voucher);
+  return drupal_get_form('commerce_credit_voucher_ui_' . $commerce_credit_voucher->type . '_credit_voucher_form', $commerce_credit_voucher);
 }
 
 
@@ -27,11 +35,11 @@ function commerce_credit_voucher_ui_form_wrapper($commerce_credit_voucher) {
  *   The commerce credit voucher object to edit through the form.
  */
 function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_voucher) {
-
-  // Set the id to identify this as an cost centre edit form.
+  // Set the id to identify this as commerce credit voucher edit form.
   $form['#id'] = 'commerce-credit-voucher-form';
 
   // Save the commerce credit voucher for later, in case we need it.
+  $form['#commerce_credit_voucher'] = $commerce_credit_voucher;
   $form_state['commerce_credit_voucher'] = $commerce_credit_voucher;
 
   // Common fields.
@@ -40,6 +48,7 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
     '#title' => t('Code'),
     '#default_value' => check_plain($commerce_credit_voucher->code),
     '#required' => TRUE,
+    '#weight' => 5,
   );
 
   $form['amount'] = array(
@@ -47,6 +56,7 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
     '#title' => t('Amount'),
     '#default_value' => number_format(check_plain($commerce_credit_voucher->amount) / 100, 2),
     '#required' => TRUE,
+    '#weight' => 10,
   );
 
   $form['sku'] = array(
@@ -55,6 +65,15 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
     '#description' =>t('If you leave this field empty, the discount will be applied to the whole cart.'),
     '#default_value' => check_plain($commerce_credit_voucher->sku),
     '#autocomplete_path' => 'commerce_product/autocomplete/commerce_product/line_item_product_selector/product',
+    '#weight' => 15,
+  );
+
+  $form['number_of_uses'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of Uses'),
+    '#default_value' => check_plain($commerce_credit_voucher->number_of_uses),
+    '#required' => TRUE,
+    '#weight' => 20,
   );
 
   $form['is_active'] = array(
@@ -62,6 +81,7 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
     '#title' => t('Active'),
     '#default_value' => check_plain($commerce_credit_voucher->is_active),
     '#options' => array('1' => t('Yes'), '0' => t('No')),
+    '#weight' => 25,
   );
 
   $form['start_date'] = array(
@@ -74,6 +94,7 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
       'month' => date('m', check_plain($commerce_credit_voucher->start_date)),
       'day' => date('d', check_plain($commerce_credit_voucher->start_date)),
     ),
+    '#weight' => 30,
   );
 
   $form['end_date'] = array(
@@ -86,6 +107,7 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
       'month' => date('m', check_plain($commerce_credit_voucher->end_date)),
       'day' => date('d', check_plain($commerce_credit_voucher->end_date)),
     ),
+    '#weight' => 35,
   );
 
   // Add the buttons.
@@ -98,7 +120,22 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
     '#submit' => array('commerce_credit_voucher_ui_form_submit'),
   );
 
+  field_attach_form('commerce_credit_voucher', $commerce_credit_voucher, $form, $form_state);
+
+  $form['#validate'][] = 'commerce_credit_voucher_ui_form_validate';
+
   return $form;
+}
+
+
+/**
+ * Validate callback for commerce_credit_voucher_ui_form().
+ */
+function commerce_credit_voucher_ui_form_validate($form, &$form_state) {
+  $commerce_credit_voucher = $form_state['commerce_credit_voucher'];
+
+  // Field validation.
+  field_attach_form_validate('commerce_credit_voucher', $commerce_credit_voucher, $form, $form_state);
 }
 
 
@@ -111,6 +148,7 @@ function commerce_credit_voucher_ui_form_submit($form, &$form_state) {
   $commerce_credit_voucher->code = $form_state['values']['code'];
   $commerce_credit_voucher->amount = $form_state['values']['amount'] * 100;
   $commerce_credit_voucher->sku = $form_state['values']['sku'];
+  $commerce_credit_voucher->number_of_uses = $form_state['values']['number_of_uses'];
   $commerce_credit_voucher->is_active = $form_state['values']['is_active'];
   $commerce_credit_voucher->start_date = strtotime($form_state['values']['start_date']['year'] . '-'. $form_state['values']['start_date']['month'] . '-' . $form_state['values']['start_date']['day'] . ' 00:00');
   $commerce_credit_voucher->end_date = strtotime($form_state['values']['end_date']['year'] . '-'. $form_state['values']['end_date']['month'] . '-' . $form_state['values']['end_date']['day'] . ' 23:59:59');
@@ -120,6 +158,9 @@ function commerce_credit_voucher_ui_form_submit($form, &$form_state) {
     $commerce_credit_voucher->created = strtotime('now');
   }
 
+  // Notify field widgets.
+  field_attach_submit('commerce_credit_voucher', $commerce_credit_voucher, $form, $form_state);
+
   // Save the cost centre.
   commerce_credit_voucher_save($commerce_credit_voucher);
 
@@ -127,7 +168,7 @@ function commerce_credit_voucher_ui_form_submit($form, &$form_state) {
   if ($commerce_credit_voucher->voucher_id) {
     drupal_set_message(t('Credit Voucher saved.'));
     watchdog('commerce_credit_voucher', 'Created credit voucher @voucher_id.', array('@voucher_id' => $commerce_credit_voucher->voucher_id), WATCHDOG_NOTICE);
-    $form_state['redirect'] = 'admin/commerce/credit-vouchers/' . $commerce_credit_voucher->voucher_id;
+    $form_state['redirect'] = 'admin/commerce/credit-vouchers';
   }
   else {
     drupal_set_message(t('Credit voucher could not be created.'), 'error');
