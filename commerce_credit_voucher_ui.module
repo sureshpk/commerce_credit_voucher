@@ -182,6 +182,12 @@ function commerce_credit_voucher_ui_form_alter(&$form, &$form_state, $form_id) {
       commerce_credit_voucher_ui_set_breadcrumb(TRUE);
     }
   }
+
+  // Change the label for the amount field when creating/editing a percentage credit voucher.
+  if ($form_id == 'commerce_credit_voucher_ui_percentage_credit_voucher_form') {
+    $form['amount']['#title'] = t('Percentage');
+    $form['amount']['#description'] = t('For a 10% discount please type in 0.10');
+  }
 }
 
 
@@ -228,10 +234,10 @@ function commerce_credit_voucher_ui_credit_voucher_uri($commerce_credit_voucher)
 
 
 /**
- * Menu item title callback: TODO.
+ * Menu item title callback: formats the page title of the create credit voucher form page.
  *
- * @param $commerce_credit_voucher
- *   The commerce credit voucher object as loaded via the URL wildcard.
+ * @param $type
+ *   The commerce credit voucher type.
  *
  * @return
  *   A page title of the format "Create ## credit voucher".
@@ -243,7 +249,7 @@ function commerce_credit_voucher_ui_add_credit_voucher_title($type) {
 
 
 /**
- * Menu item title callback: TODO.
+ * Menu item title callback: formats the page title of the edit credit voucher form page.
  *
  * @param $commerce_credit_voucher
  *   The commerce credit voucher object as loaded via the URL wildcard.
