@@ -16,16 +16,21 @@
  */
 function theme_commerce_credit_voucher_type_add_page($variables) {
   $credit_voucher_types = $variables['credit_voucher_types'];
+  $output = '';
 
-  if ($credit_voucher_types) {
-    $output = '<dl class="credit-voucher-type-list">';
+  if (!empty($credit_voucher_types)) {
+    $items = array();
 
     foreach ($credit_voucher_types as $type => $info) {
-      $output .= '<dt>' . l($info->name, 'admin/commerce/credit-vouchers/add/' . strtr($type, '_', '-')) . '</dt>';
-      $output .= '<dd>' . filter_xss_admin($info->description) . '</dd>';
+      $items[] = array(
+        'title' => $info->name,
+        'description' => $info->description,
+        'href' => 'admin/commerce/credit-vouchers/add/' . strtr($type, '_', '-'),
+        'localized_options' => array(),
+      );
     }
 
-    $output .= '</dl>';
+    $output = theme('admin_block_content', array('content' => $items));
   }
 
   return $output;
