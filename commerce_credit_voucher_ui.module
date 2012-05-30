@@ -303,5 +303,5 @@ function commerce_credit_voucher_ui_custom_date_element($form_element) {
 
   $form_element['year']['#options'] = drupal_map_assoc(range($start_year, $end_year));
 
-	return $form_element;
+  return $form_element;
 }

@@ -1,5 +1,6 @@
 <?php
 /**
+ * @file
  * Field handler to present a link to delete a credit voucher.
  */
 class commerce_credit_voucher_handler_field_credit_voucher_link_delete extends commerce_credit_voucher_handler_field_credit_voucher_link_edit {

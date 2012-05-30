@@ -364,7 +364,7 @@ function commerce_credit_voucher_submit_form_validate($payment_method, $pane_for
     $errors = commerce_credit_voucher_is_invalid($pane_values['voucher_code'], $order);
     if ($errors) {
       foreach ($errors as $error) {
-        drupal_set_message(t($error), 'error');
+        drupal_set_message(t('@credit_voucher_error', array('@credit_voucher_error' => $error)), 'error');
       }
     }
     else {

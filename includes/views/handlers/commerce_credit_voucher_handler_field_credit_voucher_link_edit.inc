@@ -1,5 +1,6 @@
 <?php
 /**
+ * @file
  * Field handler to present a link to a credit voucher.
  */
 class commerce_credit_voucher_handler_field_credit_voucher_link_edit extends views_handler_field {

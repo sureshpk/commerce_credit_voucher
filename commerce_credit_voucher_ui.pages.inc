@@ -62,7 +62,7 @@ function commerce_credit_voucher_ui_form($form, &$form_state, $commerce_credit_v
   $form['sku'] = array(
     '#type' => 'textfield',
     '#title' => t('SKU'),
-    '#description' =>t('If you leave this field empty, the discount will be applied to the whole cart.'),
+    '#description' => t('If you leave this field empty, the discount will be applied to the whole cart.'),
     '#default_value' => check_plain($commerce_credit_voucher->sku),
     '#autocomplete_path' => 'commerce_product/autocomplete/commerce_product/line_item_product_selector/product',
     '#weight' => 15,
@@ -150,8 +150,8 @@ function commerce_credit_voucher_ui_form_submit($form, &$form_state) {
   $commerce_credit_voucher->sku = $form_state['values']['sku'];
   $commerce_credit_voucher->number_of_uses = $form_state['values']['number_of_uses'];
   $commerce_credit_voucher->is_active = $form_state['values']['is_active'];
-  $commerce_credit_voucher->start_date = strtotime($form_state['values']['start_date']['year'] . '-'. $form_state['values']['start_date']['month'] . '-' . $form_state['values']['start_date']['day'] . ' 00:00');
-  $commerce_credit_voucher->end_date = strtotime($form_state['values']['end_date']['year'] . '-'. $form_state['values']['end_date']['month'] . '-' . $form_state['values']['end_date']['day'] . ' 23:59:59');
+  $commerce_credit_voucher->start_date = strtotime($form_state['values']['start_date']['year'] . '-' . $form_state['values']['start_date']['month'] . '-' . $form_state['values']['start_date']['day'] . ' 00:00');
+  $commerce_credit_voucher->end_date = strtotime($form_state['values']['end_date']['year'] . '-' . $form_state['values']['end_date']['month'] . '-' . $form_state['values']['end_date']['day'] . ' 23:59:59');
   $commerce_credit_voucher->changed = strtotime('now');
 
   if ($commerce_credit_voucher->is_new) {
